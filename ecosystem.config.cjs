@@ -7,14 +7,15 @@
 //
 // (attendance:prune-selfies jam 02:30 setiap hari, holidays:sync Senin jam 03:00.)
 // Tambahkan entri baru ke jadwal bila routes/console.php menambah tugas.
+// Catatan: prioritas CPU rendah bisa diberikan SETELAH start: renice -n 5 -p $(pm2 pid presensiku-queue)
+// (membungkus perintah dengan `nice` di PM2 membuat proses crash-loop pada beberapa server).
 module.exports = {
   apps: [
     {
       name: "presensiku-reverb",
-      // nice: server dipakai banyak situs; pekerjaan latar tidak boleh mengalahkan request web.
-      script: "nice",
-      args: "-n 5 php artisan reverb:start --host=0.0.0.0 --port=8082",
-      interpreter: "none",
+      script: "artisan",
+      args: "reverb:start --host=0.0.0.0 --port=8082",
+      interpreter: "php",
       max_memory_restart: "150M",
       cwd: "/www/wwwroot/presensiku.yrizzz.my.id/presensiku",
       autorestart: true,
@@ -24,9 +25,9 @@ module.exports = {
     },
     {
       name: "presensiku-queue",
-      script: "nice",
-      args: "-n 5 php artisan queue:work --sleep=3 --tries=3 --timeout=90 --max-time=3600 --max-jobs=300 --memory=96",
-      interpreter: "none",
+      script: "artisan",
+      args: "queue:work --sleep=3 --tries=3 --timeout=90 --max-time=3600 --max-jobs=300 --memory=96",
+      interpreter: "php",
       max_memory_restart: "150M",
       cwd: "/www/wwwroot/presensiku.yrizzz.my.id/presensiku",
       autorestart: true,
